@@ -39,6 +39,11 @@ int main (int argc, char **argv)
     bind(sockfd, (struct sockaddr *)&routeraddr, sizeof(routeraddr));
 
     /* Code to send INIT_REQUEST goes here */
+    struct pkt_INIT_REQUEST sendinfo;
+    sendinfo.router_id = router_id;
+    //TODO fix this thingy, what is htonl? check previous code
+    uint32_t networkbytes = htonl(sendinfo);
+    sendto(sockfd,&networkbytes,sizeof(uint32_t),0,(struct sockaddr *)&routeraddr, sizeof(routeraddr));
     //TODO
     /* Code to receive and handle INIT_RESPONSE goes here */
     //TODO 
