@@ -55,7 +55,7 @@ struct route_entry {
   unsigned int next_hop; /* next hop on the shortest path to dest_id */
   unsigned int cost; /* cost to desintation router */
 #ifdef PATHVECTOR
-  unsigned int path_len; /* length of loop-free path to dest_id, eg: with path R1 -> R2 -> R3, the length is 2 */
+  unsigned int path_len; /* length of loop-free path to dest_id, eg: with path R1 -> R2 -> R3, the length is2*/
   unsigned int path[MAX_PATH_LEN]; /* array containing id's of routers along the path */
 #endif
 };

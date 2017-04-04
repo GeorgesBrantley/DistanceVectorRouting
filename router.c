@@ -39,11 +39,11 @@ int main (int argc, char **argv)
     bind(sockfd, (struct sockaddr *)&routeraddr, sizeof(routeraddr));
 
     /* Code to send INIT_REQUEST goes here */
-
+    //TODO
     /* Code to receive and handle INIT_RESPONSE goes here */
-    
+    //TODO 
     /* Code to initialize the routing table goes here */
-
+    //TODO
     /* Create and clear the LogFile */
     LogFileName = calloc(100, sizeof(char));
     sprintf(LogFileName, "router%d.log", router_id);
@@ -68,7 +68,7 @@ int main (int argc, char **argv)
          */
         if (FD_ISSET(sockfd, &rfds))
 	    {
-
+            //TODO
 	    } /* FD_ISSET */
 
         /* There was no packet received but a timeout has occurred so send an update 
@@ -76,7 +76,7 @@ int main (int argc, char **argv)
          */
         else
         {
-            
+           //TODO 
         } /* else */
     } /* while */
     

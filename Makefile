@@ -6,7 +6,7 @@ CC = gcc
 ROUTERMODE = DISTVECTOR
 
 # if DEBUG is 1, debugging messages are printed
-DEBUG = 0
+DEBUG = 1
 
 # Check which OS
 OS := $(shell uname)

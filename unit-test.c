@@ -38,6 +38,7 @@ int TestInitRT() {
     
     InitRoutingTbl (&nbrs, MyRouterId);
     ConvertTabletoPkt(&resultpkt, MyRouterId);
+    printf("\nTEST, Num Routes: %d\n",resultpkt.no_routes);
     MyAssert(resultpkt.no_routes==3,"Incorrect number of routes after initializing the routing table");
     for(i=0; i<resultpkt.no_routes; i++) {
         if(resultpkt.route[i].dest_id == 1) {
