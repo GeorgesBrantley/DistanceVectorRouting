@@ -167,6 +167,7 @@ void PrintRoutes (FILE* Logfile, int myID)
     }
     strcat(txt,"\n\n");
     fputs(txt,L); 
+    fflush(L);
 
     fclose(L);
 } /* PrintRoutes */

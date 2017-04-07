@@ -2,6 +2,9 @@
 #include "ni.h"
 #include "router.h"
 #include <time.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 /* Thanks to Prof. Rao for this file. */
 
@@ -14,6 +17,11 @@ int main (int argc, char **argv)
 
     //DEAD keeps track of all timeouts per router 
     int DEAD[MAX_ROUTERS];
+    //CONVERGE keeps track of when its converged
+    int CONVERGED = CONVERGE_TIMEOUT;
+    //TIME KEEPER (ESTIMATE)
+    int TIME = 0;
+
     //initialized everything to -1
     int a;
     for (a=0; a<MAX_ROUTERS; ++a)
@@ -88,6 +96,7 @@ int main (int argc, char **argv)
        as next hop and change their costs to INFINITY. */
     while (1)
     {
+        TIME+= UPDATE_INTERVAL;
         FD_ZERO(&rfds);
         FD_SET(sockfd, &rfds);
         select(sockfd+1, &rfds, NULL, NULL, &timeout);
@@ -126,6 +135,7 @@ int main (int argc, char **argv)
             if (i > 0) {
                 //PRINT TABLES
                 PrintRoutes(LogFile,router_id);
+                CONVERGED = CONVERGE_TIMEOUT +1;
                 printf("UPDATED TABLE\n");
                 //create object -send info to ni
                 struct pkt_RT_UPDATE *sender = NULL; 
@@ -176,6 +186,7 @@ int main (int argc, char **argv)
                         printf("KILLED %d\n",x);
                         UninstallRoutesOnNbrDeath(x);
                         PrintRoutes(LogFile,router_id);
+                        CONVERGED = CONVERGE_TIMEOUT+1;
                         //Set to -1, ignore
                         DEAD[x] = -1;
                         flag++;
@@ -224,9 +235,23 @@ int main (int argc, char **argv)
                             (struct sockaddr *)&routeraddr, sizeof(routeraddr));
                 } }
         } /* else */
-        //CHECK FOR LAST TIME HEARD
+        //CHECK FOR CONVERGED
+        if (CONVERGED >= 0)
+            CONVERGED--;
+        if (CONVERGED == 0) {
+            //print 
+            char* LogFileName = calloc(100, sizeof(char));
+            sprintf(LogFileName, "router%d.log", router_id);
+            FILE *L = fopen(LogFileName,"a");
+            char txt[1000];
+            snprintf(txt,sizeof(txt),"%d:Converged\n\n",TIME);
+            fputs(txt,L);
+            fflush(L);
+            fclose(L);
+        }
         //slow things down
         sleep(UPDATE_INTERVAL);
+
     } /* while */
     //TODO CONVERGE stuff?
     close(sockfd);
