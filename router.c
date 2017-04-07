@@ -77,7 +77,7 @@ int main (int argc, char **argv)
             (struct sockaddr*)&routeraddr, &addrlen); 
     resp = (struct pkt_INIT_RESPONSE*)&buffer;
     ntoh_pkt_INIT_RESPONSE(resp);
-    printf("NEIGHBOORS: %d\n",resp->no_nbr);
+    //printf("NEIGHBOORS: %d\n",resp->no_nbr);
 
     //GET NEIGHBOORS IN A LIST
     int NEIGHS[MAX_ROUTERS];
@@ -120,7 +120,7 @@ int main (int argc, char **argv)
             struct pkt_RT_UPDATE *update;
             bzero(buffer,1000);
             recvfrom(sockfd,buffer, sizeof(struct pkt_RT_UPDATE),0
-                ,(struct sockaddr*)&routeraddr,&addrlen);
+                    ,(struct sockaddr*)&routeraddr,&addrlen);
             update = (struct pkt_RT_UPDATE*)&buffer;
 
             //translate
@@ -139,7 +139,7 @@ int main (int argc, char **argv)
             //UPDATE DEAD, set SENDER_ID to FAILURE_DETECTION (MAX)
             DEAD[update->sender_id] = FAILURE_DETECTION;
 
-            printf("UPDATE RECIEVED, from %d\n",update->sender_id);
+            //printf("UPDATE RECIEVED, from %d\n",update->sender_id);
             //Update table
             int i = UpdateRoutes(update,cost,router_id);
             //Call UpdateRoutes, if change, send updates to neighboors
@@ -147,29 +147,7 @@ int main (int argc, char **argv)
                 //PRINT TABLES
                 PrintRoutes(LogFile,router_id);
                 CONVERGED = CONVERGE_TIMEOUT +1;
-                printf("UPDATED TABLE\n");
-                //create object -send info to ni
-                /*
-                struct pkt_RT_UPDATE sender; 
-                ConvertTabletoPkt(&sender,router_id);
-
-                //loop through and find  neighboors 
-                x = 0;
-                int top = sender.no_routes;
-                for (x = 0; x < top; ++x) {
-                    if (((r+x)->dest_id == (r+x)->next_hop) &&
-                         ((r+x)->dest_id != router_id)) {
-                        //neighboor!
-                        //set dest_id
-                        sender.dest_id = (r+x)->dest_id; 
-                        //change it!
-                        hton_pkt_RT_UPDATE(&sender);
-                        //send it out!
-                        sendto(sockfd,(struct pkt_RT_UPDATE*)&sender,sizeof(sender),0,(struct sockaddr *)&routeraddr, sizeof(routeraddr));
-                        ntoh_pkt_RT_UPDATE(&sender);
-                    }
-                }
-                */
+                //printf("UPDATED TABLE\n");
                 //USE SEND TO
                 //change to routing tables
                 //update neighboors
@@ -181,7 +159,7 @@ int main (int argc, char **argv)
          */
         else {
             //update
-            printf("TIMEOUT %d\n",(int)timeout.tv_sec);
+            //printf("TIMEOUT %d\n",(int)timeout.tv_sec);
             //SEND UPDATE VALUES to all neighbors!
             //update timeout value
             timeout.tv_sec = UPDATE_INTERVAL;
@@ -197,7 +175,7 @@ int main (int argc, char **argv)
                     //check if its 0, if 0, router has gone rogue
                     if (DEAD[x] == 0) {
                         //Call UninstallRoutesOnNbrDeath with the id of dead link
-                        printf("KILLED %d\n",x);
+                        //printf("KILLED %d\n",x);
                         UninstallRoutesOnNbrDeath(x);
                         PrintRoutes(LogFile,router_id);
                         CONVERGED = CONVERGE_TIMEOUT+1;
@@ -212,12 +190,10 @@ int main (int argc, char **argv)
             //not a pointer, cause not changing global
             struct pkt_RT_UPDATE sender; 
             ConvertTabletoPkt(&sender,router_id);
-            struct route_entry *r = sender.route;
             //loop through and find  neighboors 
             x = 0;
-            int tor = sender.no_routes;
             for (x = 0; x < numNeighs; ++x) {
-                printf("Sending Update to Neighbors %d/%d\n",NEIGHS[x],numNeighs);
+                //printf("Sending Update to Neighbors %d/%d\n",NEIGHS[x],numNeighs);
                 //neighboor!
                 //send update    
                 sender.dest_id = NEIGHS[x];
@@ -226,7 +202,7 @@ int main (int argc, char **argv)
                 sendto(sockfd,(struct pkt_RT_UPDATE*)&sender,sizeof(sender),0,
                         (struct sockaddr *)&routeraddr, sizeof(routeraddr));
                 ntoh_pkt_RT_UPDATE(&sender);
-                }
+            }
         } /* else */
         //CHECK FOR CONVERGED
         if (CONVERGED >= 0)
