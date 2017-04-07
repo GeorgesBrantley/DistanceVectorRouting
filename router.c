@@ -78,7 +78,6 @@ int main (int argc, char **argv)
     sprintf(LogFileName, "router%d.log", router_id);
     LogFile = fopen(LogFileName, "w");
     fclose(LogFile);
-    LogFile = fopen(LogFileName,"w+");
     PrintRoutes(LogFile,router_id);
 
     /* Main Loop: */
@@ -125,10 +124,13 @@ int main (int argc, char **argv)
             int i = UpdateRoutes(update,cost,router_id);
             //Call UpdateRoutes, if change, send updates to neighboors
             if (i > 0) {
+                //PRINT TABLES
+                PrintRoutes(LogFile,router_id);
                 printf("UPDATED TABLE\n");
                 //create object -send info to ni
                 struct pkt_RT_UPDATE *sender = NULL; 
                 ConvertTabletoPkt(sender,router_id);
+
                 //loop through and find  neighboors 
                 x = 0;
                 int top = update->no_routes;
@@ -173,6 +175,7 @@ int main (int argc, char **argv)
                         //Call UninstallRoutesOnNbrDeath with the id of dead link
                         printf("KILLED %d\n",x);
                         UninstallRoutesOnNbrDeath(x);
+                        PrintRoutes(LogFile,router_id);
                         //Set to -1, ignore
                         DEAD[x] = -1;
                         flag++;
@@ -225,7 +228,6 @@ int main (int argc, char **argv)
         //slow things down
         sleep(UPDATE_INTERVAL);
     } /* while */
-    //TODO print stuff
     //TODO CONVERGE stuff?
     close(sockfd);
     return 0;

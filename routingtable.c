@@ -135,7 +135,7 @@ int UpdateRoutes (struct pkt_RT_UPDATE *RecvdUpdatePacket, int costToNbr, int my
  */
 void ConvertTabletoPkt (struct pkt_RT_UPDATE *UpdatePacketToSend, int myID)
 {
-    int x = 1;
+    int x;
     //update packet with info
     UpdatePacketToSend->sender_id = myID;
     UpdatePacketToSend->no_routes = NumRoutes;
@@ -155,14 +155,20 @@ void ConvertTabletoPkt (struct pkt_RT_UPDATE *UpdatePacketToSend, int myID)
  */
 void PrintRoutes (FILE* Logfile, int myID)
 {
-    // ASSUME FILE is already open
+    char* LogFileName = calloc(100, sizeof(char));
+    sprintf(LogFileName, "router%d.log", myID);
+    FILE *L = fopen(LogFileName,"a");
     int x = 0;
+    char txt[1000];
+
     //write to file
     for (x = 0; x < NumRoutes; ++x) {
-        char txt[100];
-        snprintf(txt,sizeof txt, "R%d -> R%d: R%d, %d\n", myID,routingTable[x].dest_id, routingTable[x].next_hop, routingTable[x].cost); 
-
+        snprintf(txt,sizeof(txt), "R%d -> R%d: R%d, %d\n", myID,routingTable[x].dest_id, routingTable[x].next_hop, routingTable[x].cost); 
     }
+    strcat(txt,"\n\n");
+    fputs(txt,L); 
+
+    fclose(L);
 } /* PrintRoutes */
 
 /**
