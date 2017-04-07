@@ -1,6 +1,6 @@
 #include "ni.h"
 #include "router.h"
-
+#include <string.h>
 /* Thanks to Prof. Rao for this file. */
 
 /* The following two global variables are defined and used only in routingtable.c for convenience. */
@@ -163,7 +163,9 @@ void PrintRoutes (FILE* Logfile, int myID)
 
     //write to file
     for (x = 0; x < NumRoutes; ++x) {
-        snprintf(txt,sizeof(txt), "R%d -> R%d: R%d, %d\n", myID,routingTable[x].dest_id, routingTable[x].next_hop, routingTable[x].cost); 
+        char tmp[1000];
+        snprintf(tmp,sizeof(tmp), "R%d -> R%d: R%d, %d\n", myID,routingTable[x].dest_id, routingTable[x].next_hop, routingTable[x].cost); 
+        strcat(txt,tmp);
     }
     strcat(txt,"\n\n");
     fputs(txt,L); 

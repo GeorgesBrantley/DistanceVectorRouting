@@ -78,6 +78,16 @@ int main (int argc, char **argv)
     resp = (struct pkt_INIT_RESPONSE*)&buffer;
     ntoh_pkt_INIT_RESPONSE(resp);
     printf("NEIGHBOORS: %d\n",resp->no_nbr);
+
+    //GET NEIGHBOORS IN A LIST
+    int NEIGHS[MAX_ROUTERS];
+    struct nbr_cost *neigh;
+    neigh = resp->nbrcost;
+    int numNeighs = resp->no_nbr;
+    int dd = 0;
+    for (dd=0; dd < numNeighs;++dd){
+        NEIGHS[dd] = (neigh+dd)->nbr; 
+    }
     /* Code to initialize the routing table goes here */
     InitRoutingTbl(resp,router_id); 
 
@@ -119,7 +129,8 @@ int main (int argc, char **argv)
             int cost = 0;
             struct route_entry *r = update->route;
             int x = 0;
-            for (x = 0;x < update->no_routes; ++x) {
+            int dop = update->no_routes;
+            for (x = 0;x < dop; ++x) {
                 if ((r+x)->dest_id == router_id) {
                     cost = (r+x)->cost;
                     break;
@@ -138,24 +149,27 @@ int main (int argc, char **argv)
                 CONVERGED = CONVERGE_TIMEOUT +1;
                 printf("UPDATED TABLE\n");
                 //create object -send info to ni
-                struct pkt_RT_UPDATE *sender = NULL; 
-                ConvertTabletoPkt(sender,router_id);
+                /*
+                struct pkt_RT_UPDATE sender; 
+                ConvertTabletoPkt(&sender,router_id);
 
                 //loop through and find  neighboors 
                 x = 0;
-                int top = update->no_routes;
+                int top = sender.no_routes;
                 for (x = 0; x < top; ++x) {
                     if (((r+x)->dest_id == (r+x)->next_hop) &&
                          ((r+x)->dest_id != router_id)) {
                         //neighboor!
                         //set dest_id
-                        sender->dest_id = (r+x)->dest_id; 
+                        sender.dest_id = (r+x)->dest_id; 
                         //change it!
-                        hton_pkt_RT_UPDATE(sender);
+                        hton_pkt_RT_UPDATE(&sender);
                         //send it out!
                         sendto(sockfd,(struct pkt_RT_UPDATE*)&sender,sizeof(sender),0,(struct sockaddr *)&routeraddr, sizeof(routeraddr));
+                        ntoh_pkt_RT_UPDATE(&sender);
                     }
                 }
+                */
                 //USE SEND TO
                 //change to routing tables
                 //update neighboors
@@ -171,7 +185,7 @@ int main (int argc, char **argv)
             //SEND UPDATE VALUES to all neighbors!
             //update timeout value
             timeout.tv_sec = UPDATE_INTERVAL;
-
+            timeout.tv_usec = 0;
             //GO through dead, subtrack 1 from each positive number
             int flag = 0;
             int x;
@@ -194,25 +208,6 @@ int main (int argc, char **argv)
                 }
             }
             //Use CovnertTabletoPkt to update neighboors
-            if (flag >0) {
-                struct pkt_RT_UPDATE update;
-                ConvertTabletoPkt(&update,router_id);
-                struct route_entry *r = update.route;
-                //SEND TO NEIGHBORS 
-                int top = update.no_routes;
-                for (x = 0; x < top; ++x) {
-                    if (((r+x)->dest_id == (r+x)->next_hop)&&
-                        ((r+x)->dest_id != router_id)) {
-                        printf("Updating Neighboor %d\n",(r+x)->dest_id);
-                        //neighboor!
-                        //send update    
-                        update.dest_id = (r+x)->dest_id;
-                        hton_pkt_RT_UPDATE(&update);
-                        //send it out!     
-                        sendto(sockfd,(char *)&update,1024+sizeof(update),0,
-                                (struct sockaddr *)&routeraddr, sizeof(routeraddr));
-                    } } } //end of neighboor update
-
             //send struct
             //not a pointer, cause not changing global
             struct pkt_RT_UPDATE sender; 
@@ -220,20 +215,18 @@ int main (int argc, char **argv)
             struct route_entry *r = sender.route;
             //loop through and find  neighboors 
             x = 0;
-            int top = sender.no_routes;
-            for (x = 0; x < top; ++x) {
-                if (((r+x)->dest_id == (r+x)->next_hop) && 
-                        ((r+x)->dest_id != router_id)) {
-                    printf("Sending Update to Neighbors %d\n",(r+x)->dest_id);
-                    //neighboor!
-                    //send update    
-                    sender.dest_id = (r+x)->dest_id;
-                    hton_pkt_RT_UPDATE(&sender);
-                    //send it out!     
-
-                    sendto(sockfd,(struct pkt_RT_UPDATE*)&sender,sizeof(sender),0,
-                            (struct sockaddr *)&routeraddr, sizeof(routeraddr));
-                } }
+            int tor = sender.no_routes;
+            for (x = 0; x < numNeighs; ++x) {
+                printf("Sending Update to Neighbors %d/%d\n",NEIGHS[x],numNeighs);
+                //neighboor!
+                //send update    
+                sender.dest_id = NEIGHS[x];
+                hton_pkt_RT_UPDATE(&sender);
+                //send it out!     
+                sendto(sockfd,(struct pkt_RT_UPDATE*)&sender,sizeof(sender),0,
+                        (struct sockaddr *)&routeraddr, sizeof(routeraddr));
+                ntoh_pkt_RT_UPDATE(&sender);
+                }
         } /* else */
         //CHECK FOR CONVERGED
         if (CONVERGED >= 0)
@@ -253,7 +246,6 @@ int main (int argc, char **argv)
         sleep(UPDATE_INTERVAL);
 
     } /* while */
-    //TODO CONVERGE stuff?
     close(sockfd);
     return 0;
 } /* main */
